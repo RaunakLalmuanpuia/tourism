@@ -1,9 +1,22 @@
 <template>
   <div>
     <div></div>
-    <p>Hello Raunak 1234</p>
-    <div>
-      <apexchart :options="chartOptions" :series="series" type="line" />
+    <br>
+    <div class="mb-10">
+      <p>Select Year</p>
+      <input type="number" v-model="selectedYear" placeholder="Enter Year" @change="fetchData" />
+      <br>
+      <br>
+      <p>Monthly Bookings for {{ selectedYear }}</p>
+      <div class="apex-chart-container">
+        <apexchart :options="chartOptions" :series="bookingsSeries" type="bar" />
+      </div>
+    </div>
+    <div class="pt-20 mt-30">
+      <p>Monthly Users for {{ selectedYear }}</p>
+      <div class="apex-chart-container">
+        <apexchart :options="chartOptions" :series="usersSeries" type="bar" />
+      </div>
     </div>
   </div>
 </template>
@@ -19,64 +32,79 @@ export default {
     return {
       chartOptions: {
         chart: {
-          id: "basic-line",
+          id: "bar",
         },
         xaxis: {
           categories: [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
+            "January",
+            "February",
+            "March",
+            "April",
             "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
           ],
         },
+        stroke: {
+          curve: 'stepline' // Set curve to 'stepline'
+        },
       },
-      // series: [
-      //   {
-      //     name: "Series 1",
-      //     data: [30, 40, 45, 50, 49, 60, 70, 91, 125],
-      //   },
-      // ],
-      series: [],
-      data: null,
+      selectedYear: new Date().getFullYear(),
+      bookingsSeries: [],
+      usersSeries: [],
     };
   },
   created() {
-    axios
-      .get("/api/visitorsMonthly")
-      .then((result) => {
-        console.log("Received data from server:", result.data);
-        // Access the data directly from the result object
-        const data = result.data.data;
-        // Ensure that data is an array before processing
-        if (Array.isArray(data)) {
-          // Initialize an empty array for series data
-          const series = [];
-          // Iterate through the data and format it into series
-          data.forEach((item) => {
-            series.push({
-              name: this.getMonthName(item.month),
-              data: [item.total_visitors], // Ensure data is wrapped in an array
-            });
-          });
-          // Assign the series data to this.series
-          this.series = series;
-          console.log("Transformed series data:", this.series);
-        } else {
-          console.error("Error: Data is not an array.");
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching data from server:", error);
-      });
+    this.fetchData();
   },
   methods: {
+    fetchData() {
+      axios
+        .get(`/api/bookingsMonthly?year=${this.selectedYear}`)
+        .then((result) => {
+          console.log("Received booking data from server:", result.data);
+          const data = result.data.data;
+          if (Array.isArray(data)) {
+            const series = [{
+              name: "Total Bookings",
+              data: data.map(item => item.total_bookings)
+            }];
+            this.bookingsSeries = series;
+            console.log("Transformed booking series data:", this.bookingsSeries);
+          } else {
+            console.error("Error: Booking data is not an array.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching booking data from server:", error);
+        });
+
+      axios
+        .get(`/api/getUsersMonthly?year=${this.selectedYear}`)
+        .then((result) => {
+          console.log("Received user data from server:", result.data);
+          const data = result.data.data;
+          if (Array.isArray(data)) {
+            const series = [{
+              name: "Total Users",
+              data: data.map(item => item.total_users)
+            }];
+            this.usersSeries = series;
+            console.log("Transformed user series data:", this.usersSeries);
+          } else {
+            console.error("Error: User data is not an array.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user data from server:", error);
+        });
+    },
     getMonthName(monthNumber) {
-      // Convert month number to name
       const months = [
         "January",
         "February",
@@ -96,3 +124,10 @@ export default {
   },
 };
 </script>
+
+<style>
+.apex-chart-container {
+  width: 800px;
+  height: 400px;
+}
+</style>
