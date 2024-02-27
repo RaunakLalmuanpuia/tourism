@@ -253,7 +253,14 @@ Route::controller(BookingCategoriesController::class)->group(function () {
 });
 
 
-Route::get('/visitorsMonthly', [ChartsController::class, 'visitorsMonthly']);
+// Get monthly visitors for admin dashboard
+Route::get('/visitorsMonthly/{year?}', [ChartController::class, 'visitorsMonthly']);
+
+// Get monthly bookings for admin dashboard
+Route::get('/bookingsMonthly/{year?}', [ChartController::class, 'bookingsMonthly']);
+
+// Get monthly users for admin dashboard
+Route::get('/getUsersMonthly/{year?}', [ChartController::class, 'getUsersMonthly']);
 
 
 
